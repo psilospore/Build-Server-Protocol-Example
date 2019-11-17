@@ -1,25 +1,18 @@
-import java.io.{File, InputStream, OutputStream}
-import java.nio.file.Path
-import java.util.concurrent.{CompletableFuture, Executors}
+import java.util.concurrent.Executors
 
+import ammonite.ops._
 import ch.epfl.scala.bsp4j._
-import org.eclipse.lsp4j.jsonrpc.{Launcher, RemoteEndpoint}
+import org.eclipse.lsp4j.jsonrpc.Launcher
+import org.newsclub.net.unix.{AFUNIXSocket, AFUNIXSocketAddress}
 
 import scala.collection.JavaConverters._
-import scala.reflect._
-import org.newsclub.net.unix.{AFUNIXSocket, AFUNIXSocketAddress}
-import ammonite.ops._
-
+import scala.compat.java8.FutureConverters._
 import scala.concurrent.Future
 import scala.util.Random
-
-import scala.compat.java8.FutureConverters._
 
 //Just a quick and dirty script so I can understand how to do BSP
 //Credit to @tindzk
 
-import scala.concurrent._
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object HelloWorld {
@@ -50,11 +43,10 @@ object HelloWorld {
     val socket = AFUNIXSocket.newInstance()
     val tempSocketFile: FilePath = pwd / s"tempSocketFile-${Random.nextLong()}.socket"
 
-    //don't block
-    Future {
+    Future { //So I don't block
       ammonite.ops.%('bloop, "bsp", "--socket", tempSocketFile)(ammonite.ops.pwd)
     }
-    Thread.sleep(1000)
+    Thread.sleep(2000)
 
     socket.connect(new AFUNIXSocketAddress(tempSocketFile.toNIO.toFile))
 
@@ -70,8 +62,6 @@ object HelloWorld {
     val server = launcher.getRemoteProxy
 
     printClient.onConnectWithServer(server)
-
-    Thread.sleep(1000)
 
     println("attempting build initialize")
 
@@ -92,6 +82,7 @@ object HelloWorld {
       initializeBuildResult <- server.buildInitialize(initBuildParams).toScala
       x = {
         println(s"Response $initializeBuildResult")
+        println(s"build/initialized")
         server.onBuildInitialized()
       }
       compileResult <- {
