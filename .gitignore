@@ -1,0 +1,7 @@
+.bloop
+.idea
+.idea_modules
+tempSocketFile*
+out/
+project/
+target/
